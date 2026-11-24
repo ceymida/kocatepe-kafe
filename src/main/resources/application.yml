@@ -1,0 +1,45 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kocatepe-kafe
+  datasource:
+    url: jdbc:h2:file:./data/kocatepe;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  thymeleaf:
+    cache: false
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+
+kafe:
+  opening-hour: 9
+  closing-hour: 23
+  full-time-max-saat: 45
+  part-time-max-saat: 20
+  min-personel-saat: 2
+  siparis-basina-personel: 15
+  toplam-masa: 30
+  tahmin-hafta-sayisi: 8
+  sentetik-hafta-sayisi: 12
+  sentetik-seed: 42
+  seed-enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: warn

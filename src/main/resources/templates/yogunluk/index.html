@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yoğunluk')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Yoğunluk Haritası</h1>
+            <p class="alt-yazi">
+                <span th:text="${@yardim.tarih(hafta.haftaBaslangici)}">20.11.2026</span>
+                &ndash;
+                <span th:text="${@yardim.tarih(hafta.haftaBitisi)}">26.11.2026</span>
+                <span class="rozet rozet-sari">ÖRNEK VERİ</span>
+                <span class="rozet rozet-gri">Sentetik</span>
+            </p>
+        </div>
+        <div class="btn-grup">
+            <a class="btn btn-sade" th:href="@{/yogunluk(hafta=${oncekiHafta})}">&larr; Önceki</a>
+            <a class="btn btn-sade" th:href="@{/yogunluk(hafta=${bugun})}">Bu Hafta</a>
+            <a class="btn btn-sade" th:href="@{/yogunluk(hafta=${sonrakiHafta})}">Sonraki &rarr;</a>
+        </div>
+    </div>
+
+    <div class="izgara izgara-4 satir-arasi">
+        <div class="istatistik">
+            <div class="deger" th:text="${hafta.toplamSiparis}">0</div>
+            <div class="etiket">Haftalık toplam sipariş</div>
+        </div>
+        <div class="istatistik">
+            <div class="deger" th:text="${hafta.gunlukOrtalama}">0</div>
+            <div class="etiket">Günlük ortalama sipariş</div>
+        </div>
+        <div class="istatistik">
+            <div class="deger" th:text="${hafta.maxSiparis}">0</div>
+            <div class="etiket">Saatlik en yüksek sipariş</div>
+        </div>
+        <div class="istatistik">
+            <div class="deger" style="font-size:1.05rem;"
+                  th:text="${hafta.enYogunGun != null ? @yardim.gunTarih(hafta.enYogunGun) : '-'}">-</div>
+            <div class="etiket">En yoğun gün</div>
+        </div>
+    </div>
+
+    <section class="kart">
+        <div class="kart-baslik">
+            <h2>Saatlik yoğunluk (sipariş sayısı)</h2>
+            <div class="isi-lejant">
+                <span>Az</span>
+                <span class="kutu" style="background:rgba(47,107,79,0.10);"></span>
+                <span class="kutu" style="background:rgba(47,107,79,0.30);"></span>
+                <span class="kutu" style="background:rgba(47,107,79,0.50);"></span>
+                <span class="kutu" style="background:rgba(47,107,79,0.70);"></span>
+                <span class="kutu" style="background:rgba(47,107,79,0.92);"></span>
+                <span>Çok</span>
+            </div>
+        </div>
+
+        <div class="tablo-scroll">
+            <table class="isi-tablo">
+                <thead>
+                <tr>
+                    <th style="text-align:left;min-width:110px;">Gün</th>
+                    <th th:each="saat : ${hafta.saatler}" th:text="${saat}">09</th>
+                    <th>Toplam</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="satir : ${hafta.satirlar}">
+                    <td style="text-align:left;">
+                        <strong th:text="${@yardim.gunAdi(satir.tarih.dayOfWeek)}">Pazartesi</strong>
+                        <div class="metin-kucuk metin-soluk" th:text="${@yardim.tarih(satir.tarih)}">20.11</div>
+                    </td>
+                    <td class="isi-hucre" th:each="h : ${satir.saatler}"
+                        th:title="${h.baslik}"
+                        th:style="|background:${h.renk};color:${h.yaziRengi};|"
+                        th:text="${h.siparisSayisi}">0</td>
+                    <td><strong th:text="${satir.toplamSiparis}">0</strong></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="metin-soluk metin-kucuk mt-1">
+            Hücre üzerine gelerek o saatteki dolu masa sayısını görebilirsiniz. Veriler gerçek POS kaydı değil,
+            sabit seed ile üretilen örnek verilerdir.
+        </p>
+    </section>
+
+    <section class="kart">
+        <h2>Günlük toplamlar</h2>
+        <div class="izgara izgara-4">
+            <div th:each="satir : ${hafta.satirlar}">
+                <div class="metin-kucuk metin-soluk"
+                     th:text="${@yardim.gunAdi(satir.tarih.dayOfWeek) + ' ' + @yardim.tarih(satir.tarih)}">Pzt</div>
+                <div style="font-size:1.25rem;font-weight:700;color:var(--kahve);"
+                     th:text="${satir.toplamSiparis}">0</div>
+                <div class="metin-kucuk metin-soluk" th:text="${satir.ortalama} + ' sipariş/saat ortalama'">0</div>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

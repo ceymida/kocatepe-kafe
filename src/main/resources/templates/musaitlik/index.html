@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Müsaitlik')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Müsaitlik Takvimim</h1>
+            <p class="alt-yazi">Müsait olduğunuz günleri işaretleyin. İşaretlemediğiniz günler vardiya atamasında
+                dikkate alınmaz.</p>
+        </div>
+    </div>
+
+    <div class="izgara izgara-2">
+        <section class="kart">
+            <div class="kart-baslik">
+                <h2 th:text="${personel.adSoyad}">Personel</h2>
+                <span class="rozet" th:text="${personel.pozisyon.etiket}">Barista</span>
+            </div>
+            <p class="metin-soluk">
+                Çalışma tipi: <strong th:text="${personel.calismaTipi.etiket}">Tam zamanlı</strong>
+                <span th:if="${personel.haftalikOffGunu != null}">
+                    &middot; Haftalık izin günü:
+                    <strong th:text="${@yardim.gunAdi(personel.haftalikOffGunu)}">Pazartesi</strong>
+                </span>
+            </p>
+            <p class="metin-soluk">Haftalık maksimum: <strong th:text="${personel.haftalikMaxSaat + ' saat'}">45 saat</strong></p>
+
+            <div class="uyari uyari-bilgi mt-1" th:if="${personel.haftalikOffGunu != null}">
+                Tam zamanlı personel olduğunuz için izin gününüz olan
+                <strong th:text="${@yardim.gunAdi(personel.haftalikOffGunu)}">Pazartesi</strong>
+                günü zaten vardiya atanamaz.
+            </div>
+
+            <form th:action="@{/musaitlik}" method="post" class="form-dikey mt-2">
+                <div th:each="gun : ${gunler}" class="onay-kutu"
+                     style="justify-content:space-between;border-bottom:1px solid var(--sinir);padding:.45rem 0;">
+                    <span>
+                        <strong th:text="${@yardim.gunAdi(gun)}">Pazartesi</strong>
+                        <span class="metin-kucuk metin-soluk"
+                              th:if="${personel.haftalikOffGunu != null and personel.haftalikOffGunu == gun}">
+                            (izin günü)
+                        </span>
+                    </span>
+                    <label style="display:flex;align-items:center;gap:.4rem;font-weight:500;">
+                        <input type="checkbox" name="gunler" th:value="${gun}"
+                               th:checked="${musaitlikler.get(gun)}">
+                        Müsaitim
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-birincil mt-2">Kaydet</button>
+            </form>
+        </section>
+
+        <section class="kart">
+            <h2>Nasıl kullanılır?</h2>
+            <ul class="metin-soluk">
+                <li>Part-time çalışanlar yalnızca müsait oldukları günlerde vardiya alabilir.</li>
+                <li>Tam zamanlı çalışanlar izin günleri dışında müsait kabul edilir.</li>
+                <li>Vardiya atamaları bu ekrandaki işaretlere göre kontrol edilir.</li>
+                <li>Değişiklikler bir sonraki vardiya planlamasında geçerlidir.</li>
+            </ul>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(baslik)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Kocatepe Kafe - ' + ${baslik}">Kocatepe Kafe</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav class="topnav" th:fragment="nav">
+    <a class="marka-link" th:href="@{/}">Kocatepe Kafe</a>
+    <div class="menu">
+        <a th:href="@{/}" th:classappend="${aktifMenu == 'panel'} ? 'aktif'">Panel</a>
+        <a sec:authorize="hasRole('YONETICI')" th:href="@{/personel}"
+           th:classappend="${aktifMenu == 'personel'} ? 'aktif'">Personel</a>
+        <a sec:authorize="hasRole('YONETICI')" th:href="@{/vardiya}"
+           th:classappend="${aktifMenu == 'vardiya'} ? 'aktif'">Vardiyalar</a>
+        <a sec:authorize="hasRole('CALISAN')" th:href="@{/musaitlik}"
+           th:classappend="${aktifMenu == 'musaitlik'} ? 'aktif'">Müsaitlik</a>
+        <a sec:authorize="hasRole('CALISAN')" th:href="@{/vardiya}"
+           th:classappend="${aktifMenu == 'vardiya'} ? 'aktif'">Vardiyam</a>
+        <a th:href="@{/takas}" th:classappend="${aktifMenu == 'takas'} ? 'aktif'">Takas</a>
+        <a sec:authorize="hasRole('YONETICI')" th:href="@{/yogunluk}"
+           th:classappend="${aktifMenu == 'yogunluk'} ? 'aktif'">Yoğunluk</a>
+        <a sec:authorize="hasRole('YONETICI')" th:href="@{/tahmin}"
+           th:classappend="${aktifMenu == 'tahmin'} ? 'aktif'">Tahmin</a>
+        <a sec:authorize="hasRole('YONETICI')" th:href="@{/csv}"
+           th:classappend="${aktifMenu == 'csv'} ? 'aktif'">CSV</a>
+    </div>
+    <div class="kullanici">
+        <span th:text="${kullaniciAdi}">kullanıcı</span>
+        <form th:action="@{/cikis}" method="post" class="mb-0">
+            <button type="submit">Çıkış</button>
+        </form>
+    </div>
+</nav>
+
+<div th:fragment="uyarilar">
+    <div class="uyari uyari-basari" th:if="${mesaj}" th:text="${mesaj}"></div>
+    <div class="uyari uyari-hata" th:if="${hata}" th:text="${hata}"></div>
+    <div class="uyari uyari-bilgi" th:if="${bilgi}" th:text="${bilgi}"></div>
+</div>
+
+</body>
+</html>

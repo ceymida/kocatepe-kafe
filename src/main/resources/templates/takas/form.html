@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yeni Takas')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Yeni Takas Talebi</h1>
+            <p class="alt-yazi">Kendi vardiyanızı seçin ve takas etmek istediğiniz personeli belirtin.</p>
+        </div>
+        <a class="btn btn-sade" th:href="@{/takas}">Taleplere Dön</a>
+    </div>
+
+    <section class="kart" style="max-width:720px;">
+        <div class="bos-durum" th:if="${#lists.isEmpty(vardiyalar)}">
+            Takas edilebilecek yaklaşan vardiyanız yok. Önce yönetici tarafından vardiya atanması gerekiyor.
+        </div>
+
+        <form th:action="@{/takas/yeni}" method="post" th:object="${form}" class="form-dikey"
+              th:if="${not #lists.isEmpty(vardiyalar)}">
+            <div class="form-grup">
+                <label for="vardiyaId">Takas edilecek vardiyam *</label>
+                <select id="vardiyaId" th:field="*{vardiyaId}">
+                    <option value="">Vardiya seçin</option>
+                    <option th:each="v : ${vardiyalar}" th:value="${v.id}"
+                            th:text="${@yardim.gunTarih(v.tarih) + ' - ' + v.vardiyaTipi.etiket + ' (' + @yardim.vardiyaSaat(v.vardiyaTipi) + ')' + (v.durum.name() == 'TASLAK' ? ' [Taslak]' : '')}">
+                        Vardiya
+                    </option>
+                </select>
+                <span class="metin-kucuk" style="color:var(--kirmizi);"
+                      th:if="${#fields.hasErrors('vardiyaId')}" th:errors="*{vardiyaId}"></span>
+            </div>
+
+            <div class="form-grup">
+                <label for="hedefPersonelId">Hedef personel *</label>
+                <select id="hedefPersonelId" th:field="*{hedefPersonelId}">
+                    <option value="">Personel seçin</option>
+                    <option th:each="p : ${hedefler}" th:value="${p.id}"
+                            th:text="${p.adSoyad + ' - ' + p.pozisyon.etiket + ' (' + p.calismaTipi.etiket + ')'}">
+                        Personel
+                    </option>
+                </select>
+                <span class="metin-kucuk" style="color:var(--kirmizi);"
+                      th:if="${#fields.hasErrors('hedefPersonelId')}" th:errors="*{hedefPersonelId}"></span>
+            </div>
+
+            <div class="uyari uyari-bilgi">
+                Hedef personelin aynı gün vardiyası varsa iki vardiya yer değiştirir. Aynı gün vardiyası yoksa
+                sizin vardiyanız hedefe devredilir ve o gün siz boş kalırsınız. Son karar yöneticidedir.
+            </div>
+
+            <div class="btn-grup">
+                <button type="submit" class="btn btn-birincil">Talep Oluştur</button>
+                <a class="btn btn-sade" th:href="@{/takas}">İptal</a>
+            </div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

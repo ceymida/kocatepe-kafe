@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Yoğunluk Tahmini')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Yoğunluk Tahmini ve Personel İhtiyacı</h1>
+            <p class="alt-yazi">
+                <span th:text="${@yardim.tarih(hafta.haftaBaslangici)}">20.11.2026</span>
+                &ndash;
+                <span th:text="${@yardim.tarih(hafta.haftaBitisi)}">26.11.2026</span>
+                <span class="rozet rozet-sari">TAHMİN</span>
+            </p>
+        </div>
+        <div class="btn-grup">
+            <a class="btn btn-sade" th:href="@{/tahmin(hafta=${oncekiHafta})}">&larr; Önceki</a>
+            <a class="btn btn-sade" th:href="@{/tahmin(hafta=${buHafta})}">Bu Hafta</a>
+            <a class="btn btn-sade" th:href="@{/tahmin(hafta=${sonrakiHafta})}">Sonraki &rarr;</a>
+        </div>
+    </div>
+
+    <div class="izgara izgara-3 satir-arasi">
+        <div class="istatistik">
+            <div class="deger" th:text="${hafta.toplamTahmin}">0</div>
+            <div class="etiket">Haftalık tahmini sipariş</div>
+        </div>
+        <div class="istatistik">
+            <div class="deger" th:text="${hafta.gunlukOrtalama}">0</div>
+            <div class="etiket">Günlük tahmini sipariş</div>
+        </div>
+        <div class="istatistik">
+            <div class="deger" style="font-size:1rem;font-weight:600;">
+                Son 8 hafta ağırlıklı ortalama
+            </div>
+            <div class="etiket">Yöntem: yeni haftalara daha yüksek ağırlık</div>
+        </div>
+    </div>
+
+    <section class="kart">
+        <div class="kart-baslik">
+            <h2>Tahmini sipariş ve gerekli personel</h2>
+            <span class="metin-kucuk metin-soluk">Hücre: tahmini sipariş / gerekli personel</span>
+        </div>
+
+        <div class="tablo-scroll">
+            <table class="isi-tablo">
+                <thead>
+                <tr>
+                    <th style="text-align:left;min-width:110px;">Gün</th>
+                    <th th:each="saat : ${hafta.saatler}" th:text="${saat}">09</th>
+                    <th>Günlük</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="satir : ${hafta.satirlar}">
+                    <td style="text-align:left;">
+                        <strong th:text="${@yardim.gunAdi(satir.tarih.dayOfWeek)}">Pazartesi</strong>
+                        <div class="metin-kucuk metin-soluk" th:text="${@yardim.tarih(satir.tarih)}">20.11</div>
+                    </td>
+                    <td class="tahmin-hucre" th:each="h : ${satir.saatler}">
+                        <div th:text="${h.tahminiSiparis}">0</div>
+                        <div class="metin-kucuk"
+                             th:classappend="${h.gerekliPersonel > 2} ? 'metin-kahve' : 'metin-soluk'"
+                             th:text="${h.gerekliPersonel} + ' kişi'">2 kişi</div>
+                    </td>
+                    <td>
+                        <strong th:text="${satir.toplamTahmin}">0</strong>
+                        <div class="metin-kucuk metin-soluk" th:text="${satir.maksPersonel} + ' kişi (tepe)'">2</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="izgara izgara-2">
+        <section class="kart">
+            <h2>Yöntem</h2>
+            <ul class="metin-soluk">
+                <li>Son 8 haftanın aynı gün ve saat kayıtları kullanılır.</li>
+                <li>Hareketli ortalama, yeni haftalara daha fazla ağırlık verir.</li>
+                <li>Karmaşık makine öğrenmesi modeli yoktur; sonradan <code>ForecastService</code>
+                    uygulaması değiştirilebilir.</li>
+                <li>Tahminler örnek (sentetik) veriye dayanır.</li>
+            </ul>
+        </section>
+
+        <section class="kart">
+            <h2>Personel ihtiyacı kuralı</h2>
+            <ul class="metin-soluk">
+                <li>Saatte kişi başı 15 sipariş varsayımı kullanılır (config: <code>siparis-basina-personel</code>).</li>
+                <li>Her saat için en az 2 personel önerilir (config: <code>min-personel-saat</code>).</li>
+                <li>Vardiya ihtiyacı, vardiya aralığındaki en yüksek saatlik ihtiyaç olarak alınır.</li>
+                <li>Vardiya tablosunda eksik/fazla personel uyarıları bu hesaba göre gösterilir.</li>
+            </ul>
+        </section>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('CSV Yükle')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>CSV Yoğunluk Verisi Yükle</h1>
+            <p class="alt-yazi">Gerçek veri geldiğinde sentetik verinin yerine aynı tabloyu doldurabilirsiniz.</p>
+        </div>
+    </div>
+
+    <div class="izgara izgara-2">
+        <section class="kart">
+            <h2>Dosya yükle</h2>
+            <form th:action="@{/csv/yukle}" method="post" enctype="multipart/form-data" class="form-dikey">
+                <label for="dosya">CSV dosyası</label>
+                <input type="file" id="dosya" name="dosya" accept=".csv,text/csv" required>
+                <button type="submit" class="btn btn-birincil mt-1">Yükle ve İçe Aktar</button>
+            </form>
+            <p class="metin-soluk mt-2">
+                Aynı tarih + saat için kayıt varsa güncellenir, yoksa yeni kayıt eklenir.
+                Import işlemi sipariş sayısını ve dolu masa sayısını değiştirir.
+            </p>
+        </section>
+
+        <section class="kart">
+            <h2>Beklenen format</h2>
+            <p class="metin-soluk">Başlık satırı opsiyoneldir. Virgül, noktalı virgül veya sekme ayırıcı kullanılabilir.</p>
+            <pre style="background:var(--krem);padding:.8rem;border-radius:8px;overflow-x:auto;font-size:.82rem;">tarih,saat,siparisSayisi,doluMasa
+2026-11-20,14,42,18
+2026-11-20,15,30,12
+
+# Alternatif tarih formatları:
+20.11.2026,14,42,18</pre>
+            <ul class="metin-soluk metin-kucuk">
+                <li>tarih: ISO (yyyy-MM-dd), dd.MM.yyyy, dd/MM/yyyy veya yyyy/MM/dd</li>
+                <li>saat: 09–22 arası tam sayı</li>
+                <li>siparisSayisi: negatif olmayan tam sayı</li>
+                <li>doluMasa: 0 ile 30 arası tam sayı</li>
+            </ul>
+        </section>
+    </div>
+
+    <section class="kart" th:if="${sonuc != null}">
+        <div class="kart-baslik">
+            <h2>Import sonucu</h2>
+            <span class="rozet rozet-yesil" th:text="${sonuc.toplam + ' kayit islendi'}">0</span>
+        </div>
+        <p>Eklenen: <strong th:text="${sonuc.eklenen}">0</strong> &middot;
+            Güncellenen: <strong th:text="${sonuc.guncellenen}">0</strong> &middot;
+            Atlanan: <strong th:text="${sonuc.atlanan}">0</strong></p>
+        <div class="uyari uyari-hata" th:if="${not #lists.isEmpty(sonuc.hatalar)}">
+            <div th:each="h : ${sonuc.hatalar}" th:text="${h}">hata</div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

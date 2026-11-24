@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Panel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Merhaba</h1>
+            <p class="alt-yazi">
+                <span th:text="${@yardim.tarih(bugun)}">tarih</span>
+                &middot; Kocatepe Kafe personel paneli
+                <span class="rozet rozet-sari">ÖRNEK VERİ</span>
+            </p>
+        </div>
+        <div class="btn-grup" sec:authorize="hasRole('YONETICI')">
+            <a class="btn btn-birincil" th:href="@{/vardiya}">Vardiya Tablosu</a>
+            <a class="btn btn-sade" th:href="@{/tahmin}">Yoğunluk Tahmini</a>
+        </div>
+    </div>
+
+    <!-- YONETICI PANELI -->
+    <div sec:authorize="hasRole('YONETICI')">
+        <div class="izgara izgara-4 satir-arasi">
+            <div class="istatistik">
+                <div class="deger" th:text="${aktifPersonel}">12</div>
+                <div class="etiket">Aktif personel</div>
+            </div>
+            <div class="istatistik">
+                <div class="deger" th:text="${#lists.size(bugunkuVardiyalar)}">0</div>
+                <div class="etiket">Bugünkü vardiya</div>
+            </div>
+            <div class="istatistik">
+                <div class="deger" th:text="${bekleyenTakas}">0</div>
+                <div class="etiket">Bekleyen takas talebi</div>
+            </div>
+            <div class="istatistik">
+                <div class="deger" th:text="${taslakVardiya}">0</div>
+                <div class="etiket">Önümüzdeki 7 gün taslak vardiya</div>
+            </div>
+        </div>
+
+        <div class="izgara izgara-2">
+            <section class="kart">
+                <div class="kart-baslik">
+                    <h2>Bugünün vardiyaları</h2>
+                    <a class="btn btn-kucuk btn-sade" th:href="@{/vardiya(bugun=${bugun})}">Düzenle</a>
+                </div>
+                <div class="bos-durum" th:if="${#lists.isEmpty(bugunkuVardiyalar)}">
+                    Bugün için vardiya kaydı yok.
+                </div>
+                <div class="tablo-scroll" th:unless="${#lists.isEmpty(bugunkuVardiyalar)}">
+                    <table>
+                        <thead>
+                        <tr><th>Personel</th><th>Vardiya</th><th>Durum</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="v : ${bugunkuVardiyalar}">
+                            <td th:text="${v.personel.adSoyad}">Personel</td>
+                            <td>
+                                <span class="rozet" th:text="${v.vardiyaTipi.etiket}">SABAH</span>
+                                <span class="metin-kucuk metin-soluk"
+                                      th:text="${@yardim.vardiyaSaat(v.vardiyaTipi)}">09:00-17:00</span>
+                            </td>
+                            <td>
+                                <span class="rozet"
+                                      th:classappend="${v.durum.name() == 'YAYINDA'} ? 'rozet-yesil' : 'rozet-sari'"
+                                      th:text="${v.durum.etiket}">Taslak</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="kart">
+                <div class="kart-baslik">
+                    <h2>Hızlı işlemler</h2>
+                </div>
+                <div class="btn-grup">
+                    <a class="btn btn-kahve" th:href="@{/personel}">Personel Yönetimi</a>
+                    <a class="btn btn-sade" th:href="@{/vardiya}">Haftalık Vardiya</a>
+                    <a class="btn btn-sade" th:href="@{/takas}">Takas Talepleri</a>
+                    <a class="btn btn-sade" th:href="@{/yogunluk}">Yoğunluk Haritası</a>
+                    <a class="btn btn-sade" th:href="@{/csv}">CSV Veri Yükle</a>
+                </div>
+                <p class="metin-soluk mt-2">
+                    Tüm yoğunluk verileri sentetiktir; gerçek POS verisi değildir. Gerçek veri için CSV yükleme
+                    sayfasını kullanabilirsiniz.
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <!-- CALISAN PANELI -->
+    <div sec:authorize="hasRole('CALISAN')">
+        <div class="izgara izgara-2">
+            <section class="kart">
+                <div class="kart-baslik">
+                    <h2>Yaklaşan vardiyalarım</h2>
+                    <a class="btn btn-kucuk btn-sade" th:href="@{/vardiya}">Tümü</a>
+                </div>
+                <div class="bos-durum" th:if="${#lists.isEmpty(yaklasanVardiyalar)}">
+                    Yayınlanmış yaklaşan vardiyanız yok.
+                </div>
+                <ul class="liste-temiz" th:unless="${#lists.isEmpty(yaklasanVardiyalar)}">
+                    <li th:each="v : ${yaklasanVardiyalar}" style="display:flex;justify-content:space-between;gap:.5rem;">
+                        <span th:text="${@yardim.gunTarih(v.tarih)}">Pazartesi 20.11.2026</span>
+                        <span>
+                            <span class="rozet" th:text="${v.vardiyaTipi.etiket}">SABAH</span>
+                            <span class="metin-kucuk metin-soluk"
+                                  th:text="${@yardim.vardiyaSaat(v.vardiyaTipi)}">09:00-17:00</span>
+                        </span>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="kart">
+                <div class="kart-baslik">
+                    <h2>Bana gelen takas talepleri</h2>
+                    <a class="btn btn-kucuk btn-sade" th:href="@{/takas}">Takaslar</a>
+                </div>
+                <div class="bos-durum" th:if="${#lists.isEmpty(gelenTalepler)}">
+                    Şu an cevap bekleyen takas talebiniz yok.
+                </div>
+                <ul class="liste-temiz" th:unless="${#lists.isEmpty(gelenTalepler)}">
+                    <li th:each="t : ${gelenTalepler}">
+                        <strong th:text="${t.talepEden.adSoyad}">Talep eden</strong>
+                        <span th:text="${@yardim.gunTarih(t.vardiya.tarih)}">tarih</span> günü için takas istiyor.
+                        <a th:href="@{/takas}">İncele</a>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

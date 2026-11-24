@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Vardiyalar')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Haftalık Vardiya Tablosu</h1>
+            <p class="alt-yazi">
+                <span th:text="${@yardim.tarih(hafta.haftaBaslangici)}">20.11.2026</span>
+                &ndash;
+                <span th:text="${@yardim.tarih(hafta.haftaBitisi)}">26.11.2026</span>
+                <span class="rozet rozet-sari">ÖRNEK VERİ</span>
+            </p>
+        </div>
+        <div class="btn-grup">
+            <a class="btn btn-sade" th:href="@{/vardiya(hafta=${oncekiHafta})}">&larr; Önceki</a>
+            <a class="btn btn-sade" th:href="@{/vardiya(hafta=${bugun})}">Bu Hafta</a>
+            <a class="btn btn-sade" th:href="@{/vardiya(hafta=${sonrakiHafta})}">Sonraki &rarr;</a>
+        </div>
+    </div>
+
+    <div class="kart">
+        <div class="kart-baslik">
+            <div class="btn-grup">
+                <form method="get" th:action="@{/vardiya}" class="btn-grup">
+                    <input type="date" name="hafta" th:value="${hafta.haftaBaslangici}" style="width:auto;">
+                    <button type="submit" class="btn btn-sade btn-kucuk">Haftaya Git</button>
+                </form>
+                <span class="rozet"
+                      th:classappend="${hafta.tamamenYayinda} ? 'rozet-yesil' : 'rozet-sari'"
+                      th:text="${hafta.tamamenYayinda} ? 'Hafta yayında' : (${hafta.toplamVardiya} + ' vardiya, ' + ${hafta.yayindakiVardiya} + ' yayında')">
+                    Durum
+                </span>
+                <span class="metin-kucuk metin-soluk"
+                      th:text="${hafta.toplamVardiya} + ' vardiya / ' + ${#lists.size(hafta.satirlar)} + ' personel'">
+                    Özet
+                </span>
+            </div>
+
+            <div class="btn-grup" sec:authorize="hasRole('YONETICI')">
+                <form th:action="@{/vardiya/otomatik}" method="post" class="mb-0"
+                      onsubmit="return confirm('Bu haftanın TASLAK vardiyaları silinip otomatik taslak oluşturulacak. Devam edilsin mi?');">
+                    <input type="hidden" name="hafta" th:value="${hafta.haftaBaslangici}">
+                    <button type="submit" class="btn btn-kahve">Otomatik Taslak Oluştur</button>
+                </form>
+                <form th:action="@{/vardiya/yayinla}" method="post" class="mb-0"
+                      onsubmit="return confirm('Bu haftadaki tum vardiyalar YAYINDA yapilacak. Onayliyor musunuz?');">
+                    <input type="hidden" name="hafta" th:value="${hafta.haftaBaslangici}">
+                    <button type="submit" class="btn btn-birincil">Haftayı Yayınla</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="uyari uyari-bilgi" sec:authorize="hasRole('YONETICI')">
+            Hücrelerde <strong>SABAH / AKSAM</strong> seçip <strong>Kaydet</strong> butonuna basın.
+            Boş bırakılan hücre vardiyayı siler. Tam zamanlı personelin izin günü OFF olarak görünür.
+            Haftalık limit aşımı uyarı olarak gösterilir; aynı güne iki vardiya atanamaz.
+        </div>
+
+        <form th:action="@{/vardiya/kaydet}" method="post">
+            <input type="hidden" name="hafta" th:value="${hafta.haftaBaslangici}">
+            <div class="tablo-scroll">
+                <table class="vardiya-tablo">
+                    <thead>
+                    <tr>
+                        <th>Personel</th>
+                        <th th:each="gun : ${hafta.gunler}"
+                            th:classappend="${gun.dayOfWeek.name() == 'SATURDAY' or gun.dayOfWeek.name() == 'SUNDAY'} ? 'hafta-sonu'">
+                            <div th:text="${@yardim.kisaGun(gun.dayOfWeek)}">Pzt</div>
+                            <div class="metin-kucuk" style="font-weight:400;"
+                                 th:text="${@yardim.tarih(gun)}">20.11</div>
+                        </th>
+                        <th>Toplam</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="satir : ${hafta.satirlar}">
+                        <td>
+                            <strong th:text="${satir.personel.adSoyad}">Personel</strong>
+                            <div class="metin-kucuk metin-soluk">
+                                <span th:text="${satir.personel.pozisyon.etiket}">Barista</span>
+                                &middot;
+                                <span th:text="${satir.personel.calismaTipi == T(com.kocatepe.kafe.entity.CalismaTipi).PART_TIME} ? 'PT' : 'TZ'">TZ</span>
+                            </div>
+                        </td>
+                        <td th:each="gun : ${hafta.gunler}"
+                            th:with="vardiya=${satir.vardiya(gun)}"
+                            th:classappend="${gun.dayOfWeek.name() == 'SATURDAY' or gun.dayOfWeek.name() == 'SUNDAY'} ? 'hafta-sonu'">
+                            <!-- Yönetici: düzenlenebilir hücre -->
+                            <div th:if="${yonetici}">
+                                <select class="compakt"
+                                        th:name="${'tip_' + satir.personel.id + '_' + @yardim.iso(gun)}">
+                                    <option value="">-</option>
+                                    <option value="SABAH"
+                                            th:selected="${vardiya != null and vardiya.vardiyaTipi.name() == 'SABAH'}">SABAH</option>
+                                    <option value="AKSAM"
+                                            th:selected="${vardiya != null and vardiya.vardiyaTipi.name() == 'AKSAM'}">AKSAM</option>
+                                </select>
+                                <div class="metin-kucuk mt-1">
+                                    <span class="rozet"
+                                          th:if="${vardiya != null and vardiya.durum.name() == 'YAYINDA'}">Y</span>
+                                    <span class="rozet rozet-sari"
+                                          th:if="${vardiya != null and vardiya.durum.name() == 'TASLAK'}">T</span>
+                                    <span class="rozet rozet-gri"
+                                          th:if="${vardiya == null and satir.personel.haftalikOffGunu != null and satir.personel.haftalikOffGunu == gun.dayOfWeek}">OFF</span>
+                                </div>
+                            </div>
+                            <!-- Çalışan: sadece goruntuleme -->
+                            <div th:unless="${yonetici}">
+                                <span class="rozet" th:if="${vardiya != null}"
+                                      th:classappend="${vardiya.durum.name() == 'YAYINDA'} ? 'rozet-yesil' : 'rozet-sari'"
+                                      th:text="${vardiya.vardiyaTipi.etiket}">SABAH</span>
+                                <span class="metin-soluk"
+                                      th:if="${vardiya == null}"
+                                      th:text="${satir.personel.haftalikOffGunu != null and satir.personel.haftalikOffGunu == gun.dayOfWeek} ? 'OFF' : '-'">-</span>
+                                <div class="metin-kucuk metin-soluk" th:if="${vardiya != null}"
+                                     th:text="${@yardim.vardiyaSaat(vardiya.vardiyaTipi)}">09:00-17:00</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="rozet"
+                                  th:classappend="${satir.limitAsildi} ? 'rozet-kirmizi' : 'rozet-gri'"
+                                  th:text="${satir.toplamSaat} + 's'">40s</span>
+                            <div class="metin-kucuk metin-soluk" th:text="${satir.vardiyaSayisi} + ' vardiya'">5 vardiya</div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(hafta.satirlar)}">
+                        <td colspan="9" class="bos-durum">Bu hafta için personel/vardiya kaydı bulunamadı.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="btn-grup mt-2" sec:authorize="hasRole('YONETICI')">
+                <button type="submit" class="btn btn-birincil">Kaydet</button>
+                <span class="metin-kucuk metin-soluk">Değişiklikler kaydedildiğinde yeni hücreler TASLAK olur.</span>
+            </div>
+        </form>
+    </div>
+
+    <div class="izgara izgara-2" sec:authorize="hasRole('YONETICI')">
+        <section class="kart">
+            <div class="kart-baslik">
+                <h2>Personel ihtiyacı (SABAH)</h2>
+                <span class="metin-kucuk metin-soluk">Tahmini siparişe göre</span>
+            </div>
+            <div class="tablo-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Gün</th>
+                        <th>Gerekli / Atanan</th>
+                        <th>Durum</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="gun : ${hafta.gunler}" th:with="i=${hafta.sabahIhtiyaci(gun)}">
+                        <td th:text="${@yardim.kisaGun(gun.dayOfWeek)}">Pzt</td>
+                        <td th:text="${i != null ? i.ozet : '-'}">3 / 2</td>
+                        <td>
+                            <span class="rozet"
+                                  th:if="${i != null}"
+                                  th:classappend="${i.durum == 'EKSIK'} ? 'rozet-kirmizi' : (${i.durum == 'FAZLA'} ? 'rozet-sari' : 'rozet-yesil')"
+                                  th:text="${i.durum}">UYGUN</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="kart">
+            <div class="kart-baslik">
+                <h2>Personel ihtiyacı (AKSAM)</h2>
+                <span class="metin-kucuk metin-soluk">Tahmini siparişe göre</span>
+            </div>
+            <div class="tablo-scroll">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Gün</th>
+                        <th>Gerekli / Atanan</th>
+                        <th>Durum</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="gun : ${hafta.gunler}" th:with="i=${hafta.aksamIhtiyaci(gun)}">
+                        <td th:text="${@yardim.kisaGun(gun.dayOfWeek)}">Pzt</td>
+                        <td th:text="${i != null ? i.ozet : '-'}">4 / 2</td>
+                        <td>
+                            <span class="rozet"
+                                  th:if="${i != null}"
+                                  th:classappend="${i.durum == 'EKSIK'} ? 'rozet-kirmizi' : (${i.durum == 'FAZLA'} ? 'rozet-sari' : 'rozet-yesil')"
+                                  th:text="${i.durum}">EKSİK</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="uyari uyari-bilgi" sec:authorize="hasRole('CALISAN')">
+        Yalnızca kendi vardiyalarınızı görüyorsunuz. TASLAK vardiyalar yönetici yayınlayana kadar
+        kesinleşmemiştir. Takas için <a th:href="@{/takas}">Takas Talepleri</a> sayfasını kullanın.
+    </div>
+</main>
+</body>
+</html>

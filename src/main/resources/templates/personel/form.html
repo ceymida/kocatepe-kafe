@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${baslik})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div class="sayfa-baslik">
+        <div>
+            <h1 th:text="${baslik}">Personel</h1>
+            <p class="alt-yazi">Zorunlu alanları doldurun. Part-time personel için izin günü kullanılmaz.</p>
+        </div>
+        <a class="btn btn-sade" th:href="@{/personel}">Listeye Dön</a>
+    </div>
+
+    <section class="kart" style="max-width:720px;">
+        <form th:action="${form.id == null} ? @{/personel/yeni} : @{/personel/{id}/duzenle(id=${form.id})}"
+              th:object="${form}" method="post" class="form-dikey">
+            <div class="uyari uyari-hata" th:if="${#fields.hasGlobalErrors()}">
+                <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+            </div>
+            <div class="form-satir">
+                <div class="form-grup">
+                    <label for="adSoyad">Ad Soyad *</label>
+                    <input type="text" id="adSoyad" th:field="*{adSoyad}" placeholder="Örn: Ayşe Yılmaz">
+                    <span class="metin-kucuk" style="color:var(--kirmizi);"
+                          th:if="${#fields.hasErrors('adSoyad')}" th:errors="*{adSoyad}"></span>
+                </div>
+                <div class="form-grup">
+                    <label for="pozisyon">Pozisyon *</label>
+                    <select id="pozisyon" th:field="*{pozisyon}">
+                        <option value="">Seçiniz</option>
+                        <option th:each="p : ${pozisyonlar}" th:value="${p}" th:text="${p.etiket}">Barista</option>
+                    </select>
+                    <span class="metin-kucuk" style="color:var(--kirmizi);"
+                          th:if="${#fields.hasErrors('pozisyon')}" th:errors="*{pozisyon}"></span>
+                </div>
+            </div>
+
+            <div class="form-satir">
+                <div class="form-grup">
+                    <label for="calismaTipi">Çalışma Tipi *</label>
+                    <select id="calismaTipi" th:field="*{calismaTipi}">
+                        <option th:each="c : ${calismaTipleri}" th:value="${c}" th:text="${c.etiket}">Tam zamanlı</option>
+                    </select>
+                </div>
+                <div class="form-grup">
+                    <label for="haftalikOffGunu">Haftalık İzin Günü (tam zamanlı)</label>
+                    <select id="haftalikOffGunu" th:field="*{haftalikOffGunu}">
+                        <option value="">Yok / part-time</option>
+                        <option th:each="g : ${gunler}" th:value="${g}" th:text="${@yardim.gunAdi(g)}">Pazartesi</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-satir">
+                <div class="form-grup">
+                    <label for="haftalikMaxSaat">Haftalık Maksimum Saat *</label>
+                    <input type="number" id="haftalikMaxSaat" th:field="*{haftalikMaxSaat}" min="1" max="80">
+                    <span class="metin-kucuk metin-soluk">Tam zamanlı varsayılan 45, part-time 20.</span>
+                    <span class="metin-kucuk" style="color:var(--kirmizi);"
+                          th:if="${#fields.hasErrors('haftalikMaxSaat')}" th:errors="*{haftalikMaxSaat}"></span>
+                </div>
+                <div class="form-grup">
+                    <label>Durum</label>
+                    <label class="onay-kutu">
+                        <input type="checkbox" th:field="*{aktif}">
+                        Personel aktif olarak çalışıyor
+                    </label>
+                </div>
+            </div>
+
+            <div class="btn-grup mt-2">
+                <button type="submit" class="btn btn-birincil">Kaydet</button>
+                <a class="btn btn-sade" th:href="@{/personel}">İptal</a>
+            </div>
+        </form>
+    </section>
+</main>
+
+<script>
+    // Çalışma tipi değişince makul varsayılan haftalık limiti öner.
+    (function () {
+        const tip = document.getElementById('calismaTipi');
+        const saat = document.getElementById('haftalikMaxSaat');
+        if (!tip || !saat) return;
+        tip.addEventListener('change', function () {
+            if (!saat.value || saat.value === '45' || saat.value === '20') {
+                saat.value = tip.value === 'PART_TIME' ? 20 : 45;
+            }
+        });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - Kocatepe Kafe</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="login-sayfa">
+<div class="login-kart">
+    <div class="marka">
+        <h1>Kocatepe Kafe</h1>
+        <p>Personel Vardiya Paneli</p>
+    </div>
+
+    <div class="uyari uyari-hata" th:if="${param.error}">
+        Kullanıcı adı veya şifre hatalı.
+    </div>
+    <div class="uyari uyari-basari" th:if="${param.logout}">
+        Çıkış yapıldı.
+    </div>
+
+    <form th:action="@{/giris}" method="post" class="form-dikey">
+        <label for="username">Kullanıcı adı</label>
+        <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+
+        <label for="password">Şifre</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+        <button type="submit" class="btn btn-birincil btn-tam">Giriş Yap</button>
+    </form>
+
+    <div class="ornek-bilgi">
+        <strong>Örnek hesaplar (geliştirme)</strong>
+        <p>Yönetici: <code>admin</code> / <code>admin</code></p>
+        <p>Çalışan: <code>emre.kaya@kocatepe.com</code> / <code>1234</code></p>
+        <p>Tüm örnek çalışan şifreleri: <code>1234</code></p>
+    </div>
+</div>
+</body>
+</html>

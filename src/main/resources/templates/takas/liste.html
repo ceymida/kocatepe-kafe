@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Takas Talepleri')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Takas Talepleri</h1>
+            <p class="alt-yazi">
+                Akış: çalışan talep oluşturur &rarr; hedef personel kabul/red eder &rarr; yönetici onaylar.
+                Onay sonrası vardiyalar otomatik yer değiştirir; kurallar yeniden kontrol edilir.
+            </p>
+        </div>
+        <a sec:authorize="hasRole('CALISAN')" class="btn btn-birincil" th:href="@{/takas/yeni}">Yeni Takas Talebi</a>
+    </div>
+
+    <div class="bos-durum" th:if="${#lists.isEmpty(takaslar)}">
+        Henüz takas talebi yok.
+    </div>
+
+    <div class="izgara" th:unless="${#lists.isEmpty(takaslar)}">
+        <section class="kart" th:each="t : ${takaslar}">
+            <div class="kart-baslik">
+                <div>
+                    <h2 style="font-size:1.05rem;">
+                        <span th:text="${t.talepEden.adSoyad}">Talep eden</span>
+                        &rarr;
+                        <span th:text="${t.hedefPersonel.adSoyad}">Hedef</span>
+                    </h2>
+                    <p class="metin-soluk metin-kucuk">
+                        Talep tarihi: <span th:text="${@yardim.tarihSaat(t.olusturmaTarihi)}">-</span>
+                    </p>
+                </div>
+                <div class="btn-grup">
+                    <span class="rozet"
+                          th:classappend="${t.durum.name() == 'ONAYLANDI' ? 'rozet-yesil' : (t.durum.name() == 'REDDEDILDI' ? 'rozet-kirmizi' : 'rozet-sari')}"
+                          th:text="${t.durum.etiket}">Bekliyor</span>
+                    <span class="rozet rozet-gri" th:if="${t.hedefBekliyor}">Hedef cevabı bekleniyor</span>
+                    <span class="rozet rozet-yesil" th:if="${t.hedefKabulEtti and t.durum.name() == 'BEKLIYOR'}">Hedef kabul etti</span>
+                </div>
+            </div>
+
+            <div class="izgara izgara-3">
+                <div>
+                    <div class="metin-kucuk metin-soluk">Talep edenin vardiyası</div>
+                    <strong th:text="${@yardim.gunTarih(t.vardiya.tarih)}">tarih</strong>
+                    <div>
+                        <span class="rozet" th:text="${t.vardiya.vardiyaTipi.etiket}">SABAH</span>
+                        <span class="metin-kucuk metin-soluk"
+                              th:text="${@yardim.vardiyaSaat(t.vardiya.vardiyaTipi)}">09:00-17:00</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="metin-kucuk metin-soluk">Hedef personelin aynı gün vardiyası</div>
+                    <div th:if="${t.hedefVardiya != null}">
+                        <strong th:text="${@yardim.gunTarih(t.hedefVardiya.tarih)}">tarih</strong>
+                        <div>
+                            <span class="rozet" th:text="${t.hedefVardiya.vardiyaTipi.etiket}">AKSAM</span>
+                            <span class="metin-kucuk metin-soluk"
+                                  th:text="${@yardim.vardiyaSaat(t.hedefVardiya.vardiyaTipi)}">15:00-23:00</span>
+                        </div>
+                    </div>
+                    <div th:if="${t.hedefVardiya == null}" class="metin-soluk">
+                        Yok &rarr; onaylanırsa vardiya hedefe devredilir.
+                    </div>
+                </div>
+                <div>
+                    <div class="metin-kucuk metin-soluk">Yönetici notu</div>
+                    <div th:text="${t.yoneticiNotu != null ? t.yoneticiNotu : '-'}">-</div>
+                    <div class="metin-kucuk metin-soluk mt-1"
+                         th:if="${t.hedefReddetti}">Hedef personel reddetti.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hedef personel işlemleri -->
+            <div class="btn-grup mt-2"
+                 th:if="${not yonetici and personel != null and t.hedefPersonel.id == personel.id and t.hedefBekliyor}">
+                <form th:action="@{/takas/{id}/kabul(id=${t.id})}" method="post" class="mb-0">
+                    <button type="submit" class="btn btn-birincil">Kabul Et</button>
+                </form>
+                <form th:action="@{/takas/{id}/reddet(id=${t.id})}" method="post" class="mb-0"
+                      onsubmit="return confirm('Talebi reddetmek istediğinize emin misiniz?');">
+                    <button type="submit" class="btn btn-tehlike">Reddet</button>
+                </form>
+            </div>
+
+            <!-- Yönetici işlemleri -->
+            <div th:if="${yonetici and t.durum.name() == 'BEKLIYOR'}" class="mt-2">
+                <div class="uyari uyari-bilgi" th:unless="${t.hedefKabulEtti}">
+                    Hedef personel talebi kabul etmeden yönetici onayı verilemez.
+                </div>
+                <form th:action="@{/takas/{id}/onayla(id=${t.id})}" method="post" class="form-satir"
+                      style="align-items:end;">
+                    <div class="form-grup">
+                        <label th:for="${'not_' + t.id}">Yönetici notu (opsiyonel)</label>
+                        <input type="text" th:id="${'not_' + t.id}" name="not" maxlength="500"
+                               placeholder="Orn: Onaylandı, kurallar uygun.">
+                    </div>
+                    <div class="btn-grup">
+                        <button type="submit" class="btn btn-birincil" th:disabled="${!t.hedefKabulEtti}">
+                            Onayla
+                        </button>
+                        <button type="submit" formaction="#" class="btn btn-tehlike"
+                                th:formaction="@{/takas/{id}/yonetici-reddet(id=${t.id})}">Reddet</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <div class="uyari uyari-bilgi" sec:authorize="hasRole('YONETICI')">
+        Takas onaylanırken hedef personelin izin günü, müsaitliği, aynı gün ikinci vardiya ve haftalık limit
+        kuralları yeniden kontrol edilir. Kural ihlali varsa onay yapılmaz.
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Personel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="kapsayici">
+    <div th:replace="~{fragments/layout :: uyarilar}"></div>
+
+    <div class="sayfa-baslik">
+        <div>
+            <h1>Personel</h1>
+            <p class="alt-yazi">Örnek personel listesi. Yeni eklenen kişiler için otomatik kullanıcı oluşturulur
+                (varsayılan şifre: <code>1234</code>).</p>
+        </div>
+        <a class="btn btn-birincil" th:href="@{/personel/yeni}">Yeni Personel</a>
+    </div>
+
+    <section class="kart">
+        <div class="tablo-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Pozisyon</th>
+                    <th>Çalışma</th>
+                    <th>İzin Günü</th>
+                    <th>Haftalık Max</th>
+                    <th>Durum</th>
+                    <th class="sag">İşlem</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${personeller}">
+                    <td><strong th:text="${p.adSoyad}">Ad Soyad</strong></td>
+                    <td th:text="${p.pozisyon.etiket}">Barista</td>
+                    <td th:text="${p.calismaTipi.etiket}">Tam zamanlı</td>
+                    <td th:text="${p.haftalikOffGunu != null ? @yardim.gunAdi(p.haftalikOffGunu) : '-'}">Pazartesi</td>
+                    <td th:text="${p.haftalikMaxSaat + ' saat'}">45 saat</td>
+                    <td>
+                        <span class="rozet"
+                              th:classappend="${p.aktif} ? 'rozet-yesil' : 'rozet-gri'"
+                              th:text="${p.aktif ? 'Aktif' : 'Pasif'}">Aktif</span>
+                    </td>
+                    <td class="sag">
+                        <div class="btn-grup" style="justify-content:flex-end;">
+                            <a class="btn btn-kucuk btn-sade" th:href="@{/personel/{id}/duzenle(id=${p.id})}">Düzenle</a>
+                            <form th:action="@{/personel/{id}/durum(id=${p.id})}" method="post" class="mb-0">
+                                <button type="submit" class="btn btn-kucuk"
+                                        th:classappend="${p.aktif} ? 'btn-tehlike' : 'btn-birincil'"
+                                        th:text="${p.aktif ? 'Pasife Al' : 'Aktif Et'}">Pasife Al</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
