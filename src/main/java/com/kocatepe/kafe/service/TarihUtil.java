@@ -21,6 +21,16 @@ public final class TarihUtil {
             DayOfWeek.SUNDAY, "Pazar"
     );
 
+    private static final Map<DayOfWeek, String> GUN_ADLARI_KISA = Map.of(
+            DayOfWeek.MONDAY, "Pzt",
+            DayOfWeek.TUESDAY, "Sal",
+            DayOfWeek.WEDNESDAY, "Çar",
+            DayOfWeek.THURSDAY, "Per",
+            DayOfWeek.FRIDAY, "Cum",
+            DayOfWeek.SATURDAY, "Cmt",
+            DayOfWeek.SUNDAY, "Paz"
+    );
+
     private TarihUtil() {
     }
 
@@ -37,6 +47,6 @@ public final class TarihUtil {
     }
 
     public static String gunAdiKisa(DayOfWeek gun) {
-        return gun == null ? "-" : gunAdi(gun).substring(0, 3);
+        return gun == null ? "-" : GUN_ADLARI_KISA.getOrDefault(gun, "-");
     }
 }
